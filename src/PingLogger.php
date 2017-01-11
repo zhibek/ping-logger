@@ -2,8 +2,6 @@
 class PingLogger
 {
 
-    const PING_COUNT = 60;
-
     private $dataKeys = array(
         'ping_time',
         'source',
@@ -53,7 +51,7 @@ class PingLogger
 
         $pingTime = time();
 
-        $command = sprintf('ping -c %d %s', self::PING_COUNT, $host);
+        $command = sprintf('ping -c %d %s', $this->config->ping_count, $host);
         
         exec($command, $output, $return);
 
