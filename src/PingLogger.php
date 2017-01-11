@@ -155,6 +155,68 @@ VALUES
         }
     }
 
+    public function renderStats($params)
+    {
+        if (!$this->config->db_enabled) {
+            return;
+        }
+
+        $sourcesHosts = $this->fetchSourcesHosts();
+
+        $data = null;
+        if (@$params->source && @$params->host) {
+            $fields = $this->dataKeys;
+            $data = $this->fetchData($params->source, $params->host);
+        }
+
+        require('index.phtml');
+    }
+
+    private function fetchSourcesHosts()
+    {
+        $this->initConn();
+
+        $sql = "
+SELECT DISTINCT source, host
+FROM logs
+ORDER BY source, host
+        ";
+        $result = $this->conn->query($sql, PDO::FETCH_OBJ);
+
+        $data = array();
+        foreach ($result as $row) {
+            if (!isset($data[$row->source])) {
+                $data[$row->source] = array();
+            }
+            $data[$row->source][] = $row->host;
+        }
+
+        return $data;
+    }
+
+    private function fetchData($source, $host)
+    {
+        $this->initConn();
+
+        $limit = 100;
+
+        $sql = "
+SELECT *
+FROM logs
+WHERE source = '%s' AND host = '%s'
+ORDER BY ping_time DESC
+LIMIT %d
+        ";
+        $result = $this->conn->query(sprintf($sql, $source, $host, $limit), PDO::FETCH_OBJ);
+
+        $data = array();
+        foreach ($result as $row) {
+            $data[] = $row;
+        }
+
+        return $data;
+    }
+
     static function log($message, $replacements = [])
     {
         array_unshift($replacements, date('c'));
