@@ -53,7 +53,7 @@ class PingLogger
 
         $pingTime = time();
 
-        $command = sprintf('ping -D -c %d %s', self::PING_COUNT, $host);
+        $command = sprintf('ping -c %d %s', self::PING_COUNT, $host);
         
         exec($command, $output, $return);
 
