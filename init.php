@@ -6,7 +6,8 @@ require('src/PingLogger.php');
 
 require('config.default.php');
 
+$config = array();
 @include('config.php');
-$config = (object) array_merge($configDefault, $config);
+$config = (object) array_merge($configDefault, @$config);
 
 require('auth.php');
