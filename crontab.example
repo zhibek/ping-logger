@@ -1,0 +1,2 @@
+# PingLogger
+*/5 * * * * /usr/bin/php /path/to/exec.php 8.8.8.8      # Google DNS
