@@ -1,6 +1,6 @@
 CREATE TABLE `logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `ping_time` DATETIME NOT NULL,
+  `ping_time` TIMESTAMP NOT NULL,
   `source` varchar(255) NOT NULL,
   `host` varchar(255) NOT NULL,
   `packets_transmitted` int(3) NOT NULL,

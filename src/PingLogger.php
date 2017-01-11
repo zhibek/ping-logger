@@ -68,6 +68,7 @@ class PingLogger
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                 ]
             );
+            $this->conn->exec(sprintf("SET time_zone='%s'", date('P')));
         }
     }
 
