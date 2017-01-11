@@ -245,7 +245,7 @@ ORDER BY source, host
     {
         $this->initConn();
 
-        $limit = 100;
+        $limit = 288; // 24 hours, based on 5 minute resolution
 
         $sql = "
 SELECT *
