@@ -2,18 +2,50 @@
 class PingLogger
 {
 
-    private $dataKeys = array(
-        'ping_time',
-        'source',
-        'host',
-        'packets_transmitted',
-        'packets_received',
-        'packet_loss_percent',
-        'overall_time_ms',
-        'min_ms',
-        'avg_ms',
-        'max_ms',
-        'mdev_ms',
+    private $dataFields = array(
+        'ping_time' => array(
+            'display' => true,
+            'title'   => 'Time',
+            'format'  => 'formatFieldPingTime',
+            'default_sort' => true,
+        ),
+        'source' => array(
+            'display' => true,
+            'title'   => 'Source',
+        ),
+        'host' => array(
+            'display' => true,
+            'title'   => 'Host',
+        ),
+        'packets_transmitted' => array(
+            'display' => false,
+        ),
+        'packets_received' => array(
+            'display' => false,
+        ),
+        'packet_loss_percent' => array(
+            'display' => true,
+            'title'   => 'Packet Loss',
+            'format'  => 'formatFieldPacketLossPercent'
+        ),
+        'overall_time_ms' => array(
+            'display' => false,
+        ),
+        'min_ms' => array(
+            'display' => true,
+            'title'   => 'Min (ms)',
+        ),
+        'avg_ms' => array(
+            'display' => true,
+            'title'   => 'Avg (ms)',
+        ),
+        'max_ms' => array(
+            'display' => true,
+            'title'   => 'Max (ms)',
+        ),
+        'mdev_ms' => array(
+            'display' => false,
+        ),
     );
 
     private $config;
@@ -67,7 +99,7 @@ class PingLogger
         sscanf($dataSummaryString, '%d packets transmitted, %d received, %d%% packet loss, time %dms', $data->packets_transmitted, $data->packets_received, $data->packet_loss_percent, $data->overall_time_ms);
         sscanf($dataStatsString, 'rtt min/avg/max/mdev = %f/%f/%f/%f ms', $data->min_ms, $data->avg_ms, $data->max_ms, $data->mdev_ms);
 
-        foreach ($this->dataKeys as $key) {
+        foreach (array_keys($this->dataFields) as $key) {
             if (!isset($data->{$key}) || is_null($data->{$key})) {
                 throw new \Exception(sprintf('Key "%s" requried in data, bus not set!', $key));
             }
@@ -165,8 +197,9 @@ VALUES
 
         $data = null;
         if (@$params->source && @$params->host) {
-            $fields = $this->dataKeys;
-            $data = $this->fetchData($params->source, $params->host);
+            $fields = $this->formatFields();
+            $raw = $this->fetchData($params->source, $params->host);
+            $data = $this->formatData($raw);
         }
 
         require('index.phtml');
@@ -215,6 +248,52 @@ LIMIT %d
         }
 
         return $data;
+    }
+
+    private function formatFields()
+    {
+        $fields = array();
+
+        foreach ($this->dataFields as $field => $info)
+        {
+            if ($info['display']) {
+                $fields[$field] = $info;
+            }
+        }
+
+        return $fields;
+    }
+
+    private function formatData($raw)
+    {
+        $data = array();
+
+        foreach ($raw as $row) {
+            $rowFormatted = (object) array();
+            foreach ($this->dataFields as $field => $info)
+            {
+                if ($info['display']) {
+                    if (isset($info['format'])) {
+                        $rowFormatted->{$field} = call_user_func(array($this, $info['format']), $row->{$field});
+                    } else {
+                        $rowFormatted->{$field} = $row->{$field};
+                    }
+                }
+            }
+            $data[] = $rowFormatted;
+        }
+
+        return $data;
+    }
+
+    private function formatFieldPingTime($input)
+    {
+        return date('Y-m-d H:i', strtotime($input));
+    }
+
+    private function formatFieldPacketLossPercent($input)
+    {
+        return sprintf('%d%%', $input);
     }
 
     static function log($message, $replacements = [])

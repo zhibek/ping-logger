@@ -6,9 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PingLogger</title>
 <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+<link href="//github.hubspot.com/sortable/css/sortable-theme-bootstrap.css" rel="stylesheet">
 <script src="//cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
 <script>jQuery = Zepto</script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="//github.hubspot.com/sortable/js/sortable.min.js"></script>
 </head>
 <body>
 
@@ -44,18 +46,18 @@
 
 <?php if (@$data): ?>
 <div class="container">
-<table class="table">
+<table class="table sortable-theme-bootstrap" style="width:100%" data-sortable>
     <thead>
         <tr>
-<?php foreach ($fields as $field): ?>
-            <th><?php print($field); ?></th>
+<?php foreach ($fields as $field => $info): ?>
+            <th<?php if (@$info['default_sort']): ?> data-sorted="true" data-sorted-direction="descending"<?php endif; ?>><?php print($info['title']); ?></th>
 <?php endforeach; ?>
         </tr>
     </thead>
     <tbody>
 <?php foreach ($data as $row): ?>
         <tr>
-<?php foreach ($fields as $field): ?>
+<?php foreach ($fields as $field => $info): ?>
             <td><?php print($row->{$field}); ?></td>
 <?php endforeach; ?>
         </tr>
