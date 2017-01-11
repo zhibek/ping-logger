@@ -197,9 +197,22 @@ VALUES
 
         $data = null;
         if (@$params->source && @$params->host) {
-            $fields = $this->formatFields();
+
             $raw = $this->fetchData($params->source, $params->host);
-            $data = $this->formatData($raw);
+            $fields = $this->formatFields();
+
+            if ('chart' === strtolower(@$params->mode)) {
+
+                $mode = 'chart';
+                $data = $this->formatDataChart($raw);
+
+            } else {
+
+                $mode = 'table';
+                $data = $this->formatDataTable($raw);
+
+            }
+
         }
 
         require('index.phtml');
@@ -264,7 +277,7 @@ LIMIT %d
         return $fields;
     }
 
-    private function formatData($raw)
+    private function formatDataTable($raw)
     {
         $data = array();
 
@@ -284,6 +297,57 @@ LIMIT %d
         }
 
         return $data;
+    }
+
+    private function formatDataChart($raw)
+    {
+        $fields = array(
+            'min_ms' => array(
+                'title' => 'Min (ms)',
+                'colour' => 'green',
+                'values' => array(),
+            ),
+            'avg_ms' => array(
+                'title' => 'Avg (ms)',
+                'colour' => 'blue',
+                'values' => array(),
+            ),
+            'max_ms' => array(
+                'title' => 'Max (ms)',
+                'colour' => 'red',
+                'values' => array(),
+            ),
+        );
+
+        $labels = array();
+
+        $raw = array_reverse($raw);
+
+        foreach ($raw as $row) {
+
+            $labels[] = $this->formatFieldPingTime($row->ping_time);
+
+            foreach ($fields as $field => $info) {
+                $fields[$field]['values'][] = $row->{$field};
+            }
+        }
+
+        $datasets = array();
+
+        foreach ($fields as $field => $info) {
+            $datasets[] = (object)array(
+                'label' => $info['title'],
+                'data' => $info['values'],
+                'borderColor' => $info['colour'],
+            );
+        }
+
+        $data = (object)array(
+            'labels' => $labels,
+            'datasets' => $datasets,
+        );
+
+        return json_encode($data);
     }
 
     private function formatFieldPingTime($input)
