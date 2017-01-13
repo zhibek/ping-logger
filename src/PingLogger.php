@@ -10,12 +10,10 @@ class PingLogger
             'default_sort' => true,
         ),
         'source' => array(
-            'display' => true,
-            'title'   => 'Source',
+            'display' => false,
         ),
         'host' => array(
-            'display' => true,
-            'title'   => 'Host',
+            'display' => false,
         ),
         'packets_transmitted' => array(
             'display' => false,
@@ -47,6 +45,16 @@ class PingLogger
             'display' => false,
         ),
     );
+
+    private $ranges = array(
+        5 => 'Last 6 hours', // 6 hours / every 5mins = 72 data points
+        20 => 'Last 24 hours', // 1 day / every 20mins = 72 data points
+        60 => 'Last 3 days', // 3 days / every 60mins = 72 data points
+        180 => 'Last 9 days', // 9 days / every 3 hours = 72 data points
+        720 => 'Last 36 days', // 36 days / every 12 hours = 72 data points
+    );
+
+    private $defaultRange = 5;
 
     private $config;
 
@@ -199,10 +207,13 @@ VALUES
         $data = null;
         if (@$params->source && @$params->host) {
 
-            $raw = $this->fetchData($params->source, $params->host);
+            $ranges = $this->ranges;
+            $range = isset($params->range) ? $params->range : $this->defaultRange;
             $fields = $this->formatFields();
+            $raw = $this->fetchData($params->source, $params->host, $range);
 
-            if ('chart' === strtolower(@$params->mode)) {
+            // default to "chart" mode, unless "table" is selected
+            if ('table' !== strtolower(@$params->mode)) {
 
                 $mode = 'chart';
                 $data = $this->formatDataChart($raw);
@@ -241,20 +252,21 @@ ORDER BY source, host
         return $data;
     }
 
-    private function fetchData($source, $host)
+    private function fetchData($source, $host, $range)
     {
         $this->initConn();
 
-        $limit = 288; // 24 hours, based on 5 minute resolution
+        $limit = 72; // 6 hours, based on 5 minute resolution
 
         $sql = "
-SELECT *
+SELECT (UNIX_TIMESTAMP(ping_time) DIV (%d * 60)) AS ping_time_range, ping_time, AVG(packet_loss_percent) AS packet_loss_percent, MIN(min_ms) AS min_ms, AVG(avg_ms) AS avg_ms, MAX(max_ms) AS max_ms
 FROM logs
 WHERE source = '%s' AND host = '%s'
-ORDER BY ping_time DESC
+GROUP BY ping_time_range
+ORDER BY ping_time_range DESC
 LIMIT %d
         ";
-        $result = $this->conn->query(sprintf($sql, $source, $host, $limit), PDO::FETCH_OBJ);
+        $result = $this->conn->query(sprintf($sql, $range, $source, $host, $limit), PDO::FETCH_OBJ);
 
         $data = array();
         foreach ($result as $row) {

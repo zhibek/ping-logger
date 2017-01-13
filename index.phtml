@@ -24,29 +24,43 @@
 <div class="container">
 <form action="." onchange="this.submit()">
 
-<label for="source">Source</label>
+<span class="pull-left" style="margin-right:1em;">
+<label for="source">Source</label><br>
 <select id="source" name="source">
     <option value="">Select...</option>
 <?php foreach (array_keys($sourcesHosts) as $sourceItem): ?>
-    <option value="<?php print($sourceItem); ?>"<?php if (@$params->source === $sourceItem): ?>selected<?php endif; ?>><?php print($sourceItem); ?></option>
+    <option value="<?php print($sourceItem); ?>"<?php if (@$params->source === $sourceItem): ?> selected<?php endif; ?>><?php print($sourceItem); ?></option>
 <?php endforeach; ?>
 </select>
+</span>
 
-<label for="host">Host</label>
+<span class="pull-left" style="margin-right:1em;">
+<label for="host">Host</label><br>
 <select id="host" name="host">
     <option value="">Select...</option>
 <?php if (@$params->source): ?>
 <?php foreach (@$sourcesHosts[$params->source] as $hostItem): ?>
-    <option value="<?php print($hostItem); ?>"<?php if (@$params->host === $hostItem): ?>selected<?php endif; ?>><?php print($hostItem); ?></option>
+    <option value="<?php print($hostItem); ?>"<?php if (@$params->host === $hostItem): ?> selected<?php endif; ?>><?php print($hostItem); ?></option>
 <?php endforeach; ?>
 <?php endif; ?>
 </select>
+</span>
 
 <?php if (@$params->source && @$params->host): ?>
+<span class="pull-left" style="margin-right:1em;">
+<label for="range">Range</label><br>
+<select id="range" name="range">
+<?php foreach ($ranges as $rangeFrequency => $rangeTitle): ?>
+    <option value="<?php print($rangeFrequency); ?>"<?php if ((int)$range === $rangeFrequency): ?> selected<?php endif; ?>><?php print($rangeTitle); ?></option>
+<?php endforeach; ?>
+</select>
+</span>
+
+<span class="pull-left" style="line-height:4em;">
 <input type="hidden" name="mode" value="<?php print($mode); ?>">
-<input type="submit" name="mode" value="Table" class="btn btn-default<?php if ('table' === $mode): ?> active<?php endif; ?>">
+<input type="submit" name="mode" value="Table" class="btn btn-default<?php if ('table' === $mode): ?> active<?php endif; ?>" style="margin-right:1em;">
 <input type="submit" name="mode" value="Chart" class="btn btn-default<?php if ('chart' === $mode): ?> active<?php endif; ?>">
-</ul>
+</span>
 <?php endif; ?>
 
 </form>
@@ -55,7 +69,37 @@
 <?php if (@$data): ?>
 <div class="container">
 
-<?php if ('table' === $mode): ?>
+<?php if ('chart' === $mode): ?>
+
+<canvas id="chart" width="300" height="120"></canvas>
+
+<script>
+var data = <?php print($data); ?>;
+</script>
+
+<script>
+var ctx = document.getElementById('chart');
+var chart = new Chart(ctx, {
+    type: 'line',
+    data: window.data,
+    options: {
+        animation: false,
+        scales: {
+            xAxes: [{
+                type: 'time',
+                time: {
+                    displayFormats: {
+                        minute: 'hh:mm',
+                        hour: 'YYYY-MM-DD hh:mm',
+                    },
+                },
+            }],
+        },
+    },
+});
+</script>
+
+<?php else: ?>
 
 <table class="table sortable-theme-bootstrap" style="width:100%" data-sortable>
     <thead>
@@ -75,25 +119,6 @@
 <?php endforeach; ?>
     </tbody>
 </table>
-
-<?php else: ?>
-
-<canvas id="chart" width="300" height="120"></canvas>
-
-<script>
-var data = <?php print($data); ?>;
-</script>
-
-<script>
-var ctx = document.getElementById('chart');
-var chart = new Chart(ctx, {
-    type: 'line',
-    data: window.data,
-    options: {
-        animation : false
-    },
-});
-</script>
 
 <?php endif; ?>
 
