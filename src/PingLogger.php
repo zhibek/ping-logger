@@ -318,16 +318,27 @@ LIMIT %d
             'min_ms' => array(
                 'title' => 'Min (ms)',
                 'colour' => 'green',
+                'y_axis' => 'left',
                 'values' => array(),
             ),
             'avg_ms' => array(
                 'title' => 'Avg (ms)',
                 'colour' => 'blue',
+                'y_axis' => 'left',
                 'values' => array(),
             ),
             'max_ms' => array(
                 'title' => 'Max (ms)',
                 'colour' => 'red',
+                'y_axis' => 'left',
+                'values' => array(),
+            ),
+            'packet_loss_percent' => array(
+                'title' => 'Packet Loss (%)',
+                'colour' => 'black',
+                'y_axis' => 'right',
+                'fill' => false,
+                'dash' => array(5),
                 'values' => array(),
             ),
         );
@@ -352,6 +363,9 @@ LIMIT %d
                 'label' => $info['title'],
                 'data' => $info['values'],
                 'borderColor' => $info['colour'],
+                'yAxisID' => $info['y_axis'],
+                'fill' => isset($info['fill']) ? $info['fill'] : true,
+                'borderDash' => isset($info['dash']) ? $info['dash'] : array(0),
             );
         }
 
