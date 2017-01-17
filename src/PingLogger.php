@@ -209,8 +209,9 @@ VALUES
 
             $ranges = $this->ranges;
             $range = isset($params->range) ? $params->range : $this->defaultRange;
+            $lastData = isset($params->last_data) ? $params->last_data : null;
             $fields = $this->formatFields();
-            $raw = $this->fetchData($params->source, $params->host, $range);
+            $raw = $this->fetchData($params->source, $params->host, $range, $lastData);
             list($startTime, $endTime) = $this->formatDataStartEndTimes($raw);
 
             // default to "chart" mode, unless "table" is selected
@@ -253,21 +254,30 @@ ORDER BY source, host
         return $data;
     }
 
-    private function fetchData($source, $host, $range)
+    private function fetchData($source, $host, $range, $lastData = null)
     {
         $this->initConn();
+
+        // Undocumented "last_data" feature to allow data range to be shifted with "last_data" query string
+        $lastDataWhere = 'TRUE';
+        if ($lastData) {
+            $lastDataTime = strtotime($lastData);
+            if ($lastDataTime) {
+                $lastDataWhere = sprintf("ping_time <= '%s'", date('Y-m-d H:i', $lastDataTime));
+            }
+        }
 
         $limit = 72; // 6 hours, based on 5 minute resolution
 
         $sql = "
 SELECT (UNIX_TIMESTAMP(ping_time) DIV (%d * 60)) AS ping_time_range, ping_time, AVG(packet_loss_percent) AS packet_loss_percent, MIN(min_ms) AS min_ms, AVG(avg_ms) AS avg_ms, MAX(max_ms) AS max_ms
 FROM logs
-WHERE source = '%s' AND host = '%s'
+WHERE source = '%s' AND host = '%s' AND %s
 GROUP BY ping_time_range
 ORDER BY ping_time_range DESC
 LIMIT %d
         ";
-        $result = $this->conn->query(sprintf($sql, $range, $source, $host, $limit), PDO::FETCH_OBJ);
+        $result = $this->conn->query(sprintf($sql, $range, $source, $host, $lastDataWhere, $limit), PDO::FETCH_OBJ);
 
         $data = array();
         foreach ($result as $row) {
