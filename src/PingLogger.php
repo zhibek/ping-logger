@@ -211,6 +211,7 @@ VALUES
             $range = isset($params->range) ? $params->range : $this->defaultRange;
             $fields = $this->formatFields();
             $raw = $this->fetchData($params->source, $params->host, $range);
+            list($startTime, $endTime) = $this->formatDataStartEndTimes($raw);
 
             // default to "chart" mode, unless "table" is selected
             if ('table' !== strtolower(@$params->mode)) {
@@ -288,6 +289,18 @@ LIMIT %d
         }
 
         return $fields;
+    }
+
+    private function formatDataStartEndTimes($raw)
+    {
+        if (!count($raw)) {
+            return false;
+        }
+
+        $startTime = $this->formatFieldPingTime($raw[count($raw)-1]->ping_time);
+        $endTime = $this->formatFieldPingTime($raw[0]->ping_time);
+
+        return array($startTime, $endTime);
     }
 
     private function formatDataTable($raw)
