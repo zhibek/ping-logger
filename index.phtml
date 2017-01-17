@@ -63,6 +63,8 @@
 <input type="submit" name="mode" value="Chart" class="btn btn-default<?php if ('chart' === $mode): ?> active<?php endif; ?>" style="margin-right:1em;">
 <input type="submit" name="mode" value="Table" class="btn btn-default<?php if ('table' === $mode): ?> active<?php endif; ?>">
 </span>
+
+<input type="hidden" name="last_data" value="<?php print(@$lastData); ?>">
 <?php endif; ?>
 
 </form>
