@@ -412,28 +412,21 @@ LIMIT %d
         return sprintf('%d%%', $input);
     }
 
-    public function checkStatus($params)
+    public function checkStatus($source)
     {
         if (!$this->config->db_enabled) {
             header('HTTP/1.0 404 Not Found');
             exit('Database not configured!');
         }
 
-        if (!@$params->source) {
+        if (!$source) {
             header('HTTP/1.0 404 Not Found');
             exit('Please specify "source" param!');
         }
 
         $mins = 15;
 
-        $status = $this->checkSourceStatus($params->source, $mins);
-
-        if ($status) {
-            print('OK');
-        } else {
-            header('HTTP/1.0 417 Expectation Failed');
-            exit('ERROR');
-        }
+        return $this->checkSourceStatus($source, $mins);
     }
 
     private function checkSourceStatus($source, $mins)
