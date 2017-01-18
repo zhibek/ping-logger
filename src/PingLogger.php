@@ -412,6 +412,52 @@ LIMIT %d
         return sprintf('%d%%', $input);
     }
 
+    public function checkStatus($params)
+    {
+        if (!$this->config->db_enabled) {
+            header('HTTP/1.0 404 Not Found');
+            exit('Database not configured!');
+        }
+
+        if (!@$params->source) {
+            header('HTTP/1.0 404 Not Found');
+            exit('Please specify "source" param!');
+        }
+
+        $mins = 15;
+
+        $status = $this->checkSourceStatus($params->source, $mins);
+
+        if ($status) {
+            print('OK');
+        } else {
+            header('HTTP/1.0 417 Expectation Failed');
+            print('ERROR');
+        }
+    }
+
+    private function checkSourceStatus($source, $mins)
+    {
+        $this->initConn();
+
+        $lastDataTime = strtotime(sprintf('%d mins ago', (int)$mins));
+        $lastDataString = date('Y-m-d H:i', $lastDataTime);
+
+        $sql = "
+SELECT COUNT(1) AS count
+FROM logs
+WHERE source = '%s' AND ping_time >= '%s'
+        ";
+        $result = $this->conn->query(sprintf($sql, $source, $lastDataString), PDO::FETCH_OBJ);
+
+        $count = 0;
+        foreach ($result as $row) {
+            $count = (int)$row->count;
+        }
+
+        return (0 !== $count);
+    }
+
     static function log($message, $replacements = [])
     {
         array_unshift($replacements, date('c'));
