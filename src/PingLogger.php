@@ -188,8 +188,6 @@ VALUES
 
     public function receiveRemoteData($data)
     {
-        $data = (object)$data;
-
         if ($this->config->db_enabled) {
             $this->persistLogLocally($data);
             print('OK');
