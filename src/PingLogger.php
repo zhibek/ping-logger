@@ -432,7 +432,7 @@ LIMIT %d
             print('OK');
         } else {
             header('HTTP/1.0 417 Expectation Failed');
-            print('ERROR');
+            exit('ERROR');
         }
     }
 
