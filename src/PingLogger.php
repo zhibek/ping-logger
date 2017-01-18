@@ -188,16 +188,20 @@ VALUES
 
     public function receiveRemoteData($data)
     {
-        if ($this->config->db_enabled) {
-            $this->persistLogLocally($data);
-            print('OK');
+        if (!$this->config->db_enabled) {
+            header('HTTP/1.0 404 Not Found');
+            exit('Database not configured!');
         }
+
+        $this->persistLogLocally($data);
+        print('OK');
     }
 
     public function renderStats($params)
     {
         if (!$this->config->db_enabled) {
-            return;
+            header('HTTP/1.0 404 Not Found');
+            exit('Database not configured!');
         }
 
         $sourcesHosts = $this->fetchSourcesHosts();
